@@ -2,10 +2,10 @@
 This project is designed to simulate fluid dynamics using mathematical models and visualize the results.
 
 ## Team Members
-- [**Furkan KARTALOĞLU**](https://github.com/102Furkant) - 425477
-- [**Tunahan KARALİ**](https://github.com/imnightmare53) - 425431
-- [**Mehmet Melih VAR**](https://github.com/mvarr) - 434388
-- [**Kadir YILMAZ**](https:://github.com/Kadiryilmazz) - 425481
+- [**Furkan KARTALOĞLU**](https://github.com/102Furkant) - **425477**
+- [**Tunahan KARALİ**](https://github.com/imnightmare53) - **425431**
+- [**Mehmet Melih VAR**](https://github.com/mvarr) - **434388**
+- [**Kadir YILMAZ**](https:://github.com/Kadiryilmazz) - **425481**
 
 
 
@@ -27,13 +27,13 @@ The system consists of three main components:
 
 ## How to Run
 - **Clone the Repository**
-```
-git clone <repo-url>
-cd fluid_simulation_project
+```bash
+git clone https://github.com/102Furkant/SoftwareEngineeringProject
+cd SoftwareEngineeringProject
 ```
 
 - **Set Up the Backend**
-```
+```bash
 cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
@@ -45,7 +45,7 @@ The backend (i suppose) will run at ```http://127.0.0.1:8000.``` \
 API documentation is (probabaly will be) available at ```http://127.0.0.1:8000/docs.```
 
 - **Set Up the Frontend (If applicable)**
-```
+```bash
 cd frontend
 # Run frontend setup (depending on chosen framework)
 ```
