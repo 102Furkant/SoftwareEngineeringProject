@@ -160,7 +160,6 @@ instance/
 Pipfile
 Pipfile.lock
 poetry.lock
-requirements.txt
 
 # Docker (Eğer Kullanacaksan)
 docker-compose.override.yml
