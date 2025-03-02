@@ -41,18 +41,12 @@ class SimulationInput(BaseModel):
 # this funcion do the simulation, simple example just for now
 def run_simulation(shape: str, size: int, height: int = None):
     shape = shape.lower()
-    
     # Validate size
     if size < 0:
         return "Size cannot be negative"
-        
     if shape == "square":
-        if height is not None:
-            return "height section should be empty"
         area = size * size
     elif shape == "circle":
-        if height is not None:
-            return "height section should be empty"
         area = 3.14 * (size ** 2)
     elif shape == "triangle":
         if height is None:
@@ -111,6 +105,13 @@ async def get_simulate():
 
 # endpoint to initializes the simulation via POST request
 @app.post("/simulate")
-async def simulate(shape: str = Form(...), size: int = Form(...), height: int = Form(None)):
-    result = run_simulation(shape, size, height)
-    return {"shape": shape, "size": size, "height": height, "result": result}
+async def simulate(shape: str = Form(...), size: int = Form(...), height: str = Form("")):
+    if height == "":
+        h = None
+    else:
+        try:
+            h = int(height)
+        except ValueError:
+            h = None  # or could be return error    
+    result = run_simulation(shape, size, h)
+    return {"shape": shape, "size": size, "height": h, "result": result}
