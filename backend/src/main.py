@@ -41,16 +41,27 @@ class SimulationInput(BaseModel):
 # this funcion do the simulation, simple example just for now
 def run_simulation(shape: str, size: int, height: int = None):
     shape = shape.lower()
+    
+    # Validate size
+    if size < 0:
+        return "Size cannot be negative"
+        
     if shape == "square":
+        if height is not None:
+            return "height section should be empty"
         area = size * size
     elif shape == "circle":
+        if height is not None:
+            return "height section should be empty"
         area = 3.14 * (size ** 2)
     elif shape == "triangle":
         if height is None:
-            return 0
+            return "height is required for triangle"
+        if height < 0:
+            return "Height cannot be negative"
         area = (size * height) / 2
     else:
-        area = 0
+        return f"Unsupported shape: {shape}"
     return area
 
 # GET for browser request
