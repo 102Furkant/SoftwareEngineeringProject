@@ -33,29 +33,64 @@ def test_get_simulate():
     assert response.status_code == 200
     assert "<h1>Simulation Page</h1>" in response.text
 
-# test for valid simulation (POST request)
-def test_simulate_valid():
+# Basic shape tests
+def test_simulate_square():
     response = client.post("/simulate", data={"shape": "square", "size": 10})
     assert response.status_code == 200
-    assert response.json() == {"shape": "square", "size": 10, "result": 100}
+    assert response.json() == {"shape": "square", "size": 10, "height": None, "result": 100}
 
-# test for valid simulation with circle
 def test_simulate_circle():
     response = client.post("/simulate", data={"shape": "circle", "size": 5})
     assert response.status_code == 200
-    assert response.json()["shape"] == "circle"
-    assert response.json()["size"] == 5
-    assert response.json()["result"] == 3.14 * 5 * 5
+    assert response.json() == {"shape": "circle", "size": 5, "height": None, "result": 78.5}
 
-# test for invalid shape
-def test_simulate_invalid_shape():
-    response = client.post("/simulate", data={"shape": "triangle", "size": 5})
+def test_simulate_triangle():
+    response = client.post("/simulate", data={"shape": "triangle", "size": 3, "height": 4})
     assert response.status_code == 200
-    assert response.json()["shape"] == "triangle"
-    assert response.json()["result"] == 0  # triangle is not supported
+    assert response.json() == {"shape": "triangle", "size": 3, "height": 4, "result": 6}
 
-# test for missing parameters
-def test_simulate_missing_parameters():
-    response = client.post("/simulate", data={"shape": "square"})  # size missing
-    assert response.status_code == 422  # fastAPI resolves error automaticly
+# Edge cases and error handling
+def test_simulate_negative_values():
+    response = client.post("/simulate", data={"shape": "square", "size": -5})
+    assert response.status_code == 200
+    assert response.json()["result"] == "Size cannot be negative"
 
+def test_simulate_zero_values():
+    response = client.post("/simulate", data={"shape": "square", "size": 0})
+    assert response.status_code == 200
+    assert response.json()["result"] == 0
+
+def test_simulate_triangle_without_height():
+    response = client.post("/simulate", data={"shape": "triangle", "size": 3})
+    assert response.status_code == 200
+    assert response.json()["result"] == "height is required for triangle"
+
+def test_simulate_square_with_height():
+    response = client.post("/simulate", data={"shape": "square", "size": 5, "height": 10})
+    assert response.status_code == 200
+    assert "height section should be empty" in str(response.json()["result"])
+
+def test_simulate_circle_with_height():
+    response = client.post("/simulate", data={"shape": "circle", "size": 5, "height": 10})
+    assert response.status_code == 200
+    assert "height section should be empty" in str(response.json()["result"])
+
+# Invalid input tests
+def test_simulate_invalid_shape():
+    response = client.post("/simulate", data={"shape": "pentagon", "size": 5})
+    assert response.status_code == 200
+    assert response.json()["result"] == "Unsupported shape: pentagon"
+
+def test_simulate_missing_size():
+    response = client.post("/simulate", data={"shape": "square"})
+    assert response.status_code == 422
+
+def test_simulate_case_insensitive():
+    response = client.post("/simulate", data={"shape": "SQUARE", "size": 5})
+    assert response.status_code == 200
+    assert response.json()["result"] == 25
+
+# String validation
+def test_simulate_non_numeric_size():
+    response = client.post("/simulate", data={"shape": "square", "size": "abc"})
+    assert response.status_code == 422
