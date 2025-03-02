@@ -39,11 +39,16 @@ class SimulationInput(BaseModel):
     size: int  
 
 # this funcion do the simulation, simple example just for now
-def run_simulation(shape: str, size: int):
-    if shape.lower() == "square":
+def run_simulation(shape: str, size: int, height: int = None):
+    shape = shape.lower()
+    if shape == "square":
         area = size * size
-    elif shape.lower() == "circle":
+    elif shape == "circle":
         area = 3.14 * (size ** 2)
+    elif shape == "triangle":
+        if height is None:
+            return 0
+        area = (size * height) / 2
     else:
         area = 0
     return area
@@ -53,19 +58,48 @@ def run_simulation(shape: str, size: int):
 async def get_simulate():
     return """
     <html>
-        <body>
-            <h1>Simulation Page</h1>
-            <form action="/simulate" method="post">
-                <label>Shape: <input type="text" name="shape"></label><br>
-                <label>Size: <input type="number" name="size"></label><br>
-                <button type="submit">Start Simulation</button>
-            </form>
-        </body>
+    <body>
+        <h1>Simulation Page</h1>
+        <form action="/simulate" method="post">
+        <label>Shape:
+            <select id="shape" name="shape" onchange="toggleTriangleInputs()">
+            <option value="square">square</option>
+            <option value="circle">circle</option>
+            <option value="triangle">triangle</option>
+            </select>
+        </label><br>
+        <div id="common-inputs">
+            <label>Size (base for triangle): 
+            <input type="number" name="size" required>
+            </label><br>
+        </div>
+        <div id="triangle-inputs" style="display: none;">
+            <label>Height: 
+            <input type="number" name="height">
+            </label><br>
+        </div>
+        <button type="submit">Start Simulation</button>
+        </form>
+        <script>
+        function toggleTriangleInputs() {
+            var shape = document.getElementById("shape").value;
+            var triangleInputs = document.getElementById("triangle-inputs");
+            if (shape === "triangle") {
+            triangleInputs.style.display = "block";
+            // height alanini zorunlu yapmak icin:
+            triangleInputs.querySelector("input[name='height']").required = true;
+            } else {
+            triangleInputs.style.display = "none";
+            triangleInputs.querySelector("input[name='height']").required = false;
+            }
+        }
+        </script>
+    </body>
     </html>
     """
 
 # endpoint to initializes the simulation via POST request
 @app.post("/simulate")
-async def simulate(shape: str = Form(...), size: int = Form(...)):
-    result = run_simulation(shape, size)
-    return {"shape": shape, "size": size, "result": result}
+async def simulate(shape: str = Form(...), size: int = Form(...), height: int = Form(None)):
+    result = run_simulation(shape, size, height)
+    return {"shape": shape, "size": size, "height": height, "result": result}
