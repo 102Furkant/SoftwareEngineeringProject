@@ -68,12 +68,12 @@ def test_simulate_triangle_without_height():
 def test_simulate_square_with_height():
     response = client.post("/simulate", data={"shape": "square", "size": 5, "height": 10})
     assert response.status_code == 200
-    assert "height section should be empty" in str(response.json()["result"])
+    assert response.json()["result"] == 25
 
 def test_simulate_circle_with_height():
     response = client.post("/simulate", data={"shape": "circle", "size": 5, "height": 10})
     assert response.status_code == 200
-    assert "height section should be empty" in str(response.json()["result"])
+    assert response.json()["result"] == 78.5
 
 # Invalid input tests
 def test_simulate_invalid_shape():
