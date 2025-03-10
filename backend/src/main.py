@@ -1,10 +1,10 @@
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
-
+from src.simulation import run_simulation
 app = FastAPI()
 
-# basic hub endpoint vith html-json mix. when it requested from web, it returns html-based return, when it requested from api it returns JSON.
+# basic hub endpoint with html-json mix. when it requested from web, it returns html-based return, when it requested from api it returns JSON.
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     if "text/html" in request.headers.get("accept", ""):
@@ -36,27 +36,7 @@ async def ping(request: Request):
 # create a model to take parameters from user
 class SimulationInput(BaseModel):
     shape: str 
-    size: int  
-
-# this funcion do the simulation, simple example just for now
-def run_simulation(shape: str, size: int, height: int = None):
-    shape = shape.lower()
-    # Validate size
-    if size < 0:
-        return "Size cannot be negative"
-    if shape == "square":
-        area = size * size
-    elif shape == "circle":
-        area = 3.14 * (size ** 2)
-    elif shape == "triangle":
-        if height is None:
-            return "height is required for triangle"
-        if height < 0:
-            return "Height cannot be negative"
-        area = (size * height) / 2
-    else:
-        return f"Unsupported shape: {shape}"
-    return area
+    size: int
 
 # GET for browser request
 @app.get("/simulate", response_class=HTMLResponse)
