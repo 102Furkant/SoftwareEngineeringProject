@@ -4,27 +4,25 @@ from ui import FluidSimulatorUI  # ui.py'deki arayüz sınıfını import ediyor
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((800, 600))  # Pencere boyutu, istediğin gibi ayarlayabilirsin
+    screen = pygame.display.set_mode((800, 600))  # Pencere boyutu
     pygame.display.set_caption("2D Fluid Simulator")
 
     clock = pygame.time.Clock()
-    ui = FluidSimulatorUI()  # Arayüz sınıfı örneği
+    ui = FluidSimulatorUI()  # Arayüz sınıfı
 
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            # Dilersen burada ekstra event yönetimi yapılabilir ama
-            # ui.handle_events() fonksiyonu zaten bu işi yapacak
 
-        ui.handle_events()  # Kullanıcı girişlerini işle
-        ui.draw_obstacles() # Engel çizimlerini güncelle
+        ui.handle_events()  # Kullanıcı girişleri
+        ui.draw_obstacles() # Engel çizimleri
         ui.update()         # Simülasyon adımı
         ui.render(screen)   # Ekranı güncelle
 
         pygame.display.flip()
-        clock.tick(60)      # 60 FPS sabit hız
+        clock.tick(60)      # 60 FPS
 
     pygame.quit()
     sys.exit()
