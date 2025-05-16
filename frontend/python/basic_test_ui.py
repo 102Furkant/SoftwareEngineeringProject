@@ -7,26 +7,26 @@ class FluidSimulatorUI:
         self.height = height
         self.scale = scale
         
-        # Akışkan alanı için numpy dizileri
+        # akis alani icin numpy dizileri
         self.velocity_x = np.zeros((height, width))
         self.velocity_y = np.zeros((height, width))
         self.density = np.zeros((height, width))
         self.pressure = np.zeros((height, width))
         
-        # Simülasyon parametreleri
+        # simulasyon parametreleri
         self.viscosity = 0.1
         self.diffusion = 0.1
         self.dt = 0.1
         
-        # Engel matrisi
+        # engel matrisi
         self.obstacle = np.zeros((height, width), dtype=bool)
         self.set_initial_obstacle()
         
-        # Mouse kontrolü
+        # mouse kontrolu
         self.drawing = False
 
     def set_initial_obstacle(self):
-        # Basit bir kare engel
+        # basit bir kare engel, ben test icin ekledim, gelismis ui ile beraber tekrar sekil sectirilebilir
         size = min(self.width, self.height) // 4
         x0 = (self.width - size) // 2
         y0 = (self.height - size) // 2
@@ -54,19 +54,19 @@ class FluidSimulatorUI:
             self.velocity_y[grid_y, grid_x] = 0
 
     def update(self):
-        # Navier-Stokes denklemlerinin basitleştirilmiş versiyonu
+        # navier-stokes denklemlerinin basitlestirilmis versiyonu
         self.diffuse_velocity()
         self.advect_velocity()
         self.project_velocity()
         self.diffuse_density()
         self.advect_density()
         
-        # Sol kenardan sürekli akış
+        # sol kenardan sürekli akis
         self.density[:, 0] = 1.0
         self.velocity_x[:, 0] = 1.0
 
     def diffuse_velocity(self):
-        # Hız difüzyonu
+        # hiz difuzyonu
         a = self.dt * self.viscosity
         for _ in range(20):
             self.velocity_x[1:-1, 1:-1] = (self.velocity_x[1:-1, 1:-1] + 
@@ -76,24 +76,24 @@ class FluidSimulatorUI:
                 a * (self.velocity_y[1:-1, 2:] + self.velocity_y[1:-1, :-2] +
                      self.velocity_y[2:, 1:-1] + self.velocity_y[:-2, 1:-1])) / (1 + 4 * a)
             
-            # Engelleri uygula
+            # engelleri uygula
             self.velocity_x[self.obstacle] = 0
             self.velocity_y[self.obstacle] = 0
 
     def advect_velocity(self):
-        # Hız adveksiyonu
+        # hiz adveksiyonu
         for y in range(1, self.height-1):
             for x in range(1, self.width-1):
                 if not self.obstacle[y, x]:
-                    # Geriye doğru adveksiyon
+                    # geriye dogru adveksiyon
                     x0 = x - self.dt * self.velocity_x[y, x]
                     y0 = y - self.dt * self.velocity_y[y, x]
                     
-                    # Sınırları kontrol et
+                    # sinirlari kontrol et
                     x0 = max(0.5, min(self.width-1.5, x0))
                     y0 = max(0.5, min(self.height-1.5, y0))
                     
-                    # Lineer interpolasyon
+                    # lineer interpolasyon
                     i0, i1 = int(x0), int(x0) + 1
                     j0, j1 = int(y0), int(y0) + 1
                     s1, s0 = x0 - i0, 1 - (x0 - i0)
@@ -105,58 +105,58 @@ class FluidSimulatorUI:
                                            s1 * (t0 * self.velocity_y[j0, i1] + t1 * self.velocity_y[j1, i1]))
 
     def project_velocity(self):
-        # Hız alanını diverjanssız yap
+        # hiz alanini diverjanssiz yap
         div = np.zeros((self.height, self.width))
         p = np.zeros((self.height, self.width))
         
-        # Diverjans hesapla
+        # diverjans hesapla
         div[1:-1, 1:-1] = -0.5 * (
             self.velocity_x[1:-1, 2:] - self.velocity_x[1:-1, :-2] +
             self.velocity_y[2:, 1:-1] - self.velocity_y[:-2, 1:-1]
         )
         
-        # Poisson denklemini çöz
+        # poisson denklemini coz
         for _ in range(20):
             p[1:-1, 1:-1] = (div[1:-1, 1:-1] +
                             p[1:-1, 2:] + p[1:-1, :-2] +
                             p[2:, 1:-1] + p[:-2, 1:-1]) / 4.0
             
-            # Engelleri uygula
+            # engelleri uygula
             p[self.obstacle] = 0
         
-        # Hız alanını güncelle
+        # hiz alanini guncelle
         self.velocity_x[1:-1, 1:-1] -= 0.5 * (p[1:-1, 2:] - p[1:-1, :-2])
         self.velocity_y[1:-1, 1:-1] -= 0.5 * (p[2:, 1:-1] - p[:-2, 1:-1])
         
-        # Engelleri uygula
+        # engelleri uygula
         self.velocity_x[self.obstacle] = 0
         self.velocity_y[self.obstacle] = 0
 
     def diffuse_density(self):
-        # Yoğunluk difüzyonu
+        # yoğunluk difuzyonu
         a = self.dt * self.diffusion
         for _ in range(20):
             self.density[1:-1, 1:-1] = (self.density[1:-1, 1:-1] + 
                 a * (self.density[1:-1, 2:] + self.density[1:-1, :-2] +
                      self.density[2:, 1:-1] + self.density[:-2, 1:-1])) / (1 + 4 * a)
             
-            # Engelleri uygula
+            # engelleri uygula
             self.density[self.obstacle] = 0
 
     def advect_density(self):
-        # Yoğunluk adveksiyonu
+        # yoğunluk adveksiyonu
         for y in range(1, self.height-1):
             for x in range(1, self.width-1):
                 if not self.obstacle[y, x]:
-                    # Geriye doğru adveksiyon
+                    # geriye dogru adveksiyon
                     x0 = x - self.dt * self.velocity_x[y, x]
                     y0 = y - self.dt * self.velocity_y[y, x]
                     
-                    # Sınırları kontrol et
+                    # sinirlari kontrol et
                     x0 = max(0.5, min(self.width-1.5, x0))
                     y0 = max(0.5, min(self.height-1.5, y0))
                     
-                    # Lineer interpolasyon
+                    # lineer interpolasyon
                     i0, i1 = int(x0), int(x0) + 1
                     j0, j1 = int(y0), int(y0) + 1
                     s1, s0 = x0 - i0, 1 - (x0 - i0)
@@ -168,10 +168,10 @@ class FluidSimulatorUI:
     def render(self, screen):
         screen.fill((0, 0, 0))
         
-        # Yoğunluk değerlerini normalize et
+        # yoğunluk değerlerini normalize et
         normalized_density = np.clip(self.density * 255, 0, 255).astype(np.uint8)
         
-        # Tüm grid hücrelerini çiz
+        # tum grid hücrelerini çiz
         for y in range(self.height):
             for x in range(self.width):
                 px = x * self.scale
