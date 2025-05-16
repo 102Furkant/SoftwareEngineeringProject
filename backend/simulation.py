@@ -25,6 +25,9 @@ class FluidSimulator:
 
     def set_obstacle(self, mask: np.ndarray) -> None:
         self.obstacle = mask.copy()
+        self.u[mask] = 0
+        self.v[mask] = 0
+        self.p[mask] = 0
 
     def advect(self, field: np.ndarray, u0: np.ndarray, v0: np.ndarray) -> np.ndarray:
         ny, nx = field.shape
