@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from simulation import FluidSimulator
+from backend.simulation import FluidSimulator
 
 def test_initial_state_is_empty():
     sim = FluidSimulator(nx=10, ny=10)
