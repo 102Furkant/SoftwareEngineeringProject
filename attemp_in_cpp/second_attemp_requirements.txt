@@ -1,0 +1,12 @@
+- SFML kütüphanesi (Simple and Fast Multimedia Library)
+  - Versiyon: 2.5.1 veya üzeri önerilir
+  - Kurulum:
+    - Linux (Ubuntu/Debian):
+      sudo apt-get install libsfml-dev
+    - Windows:
+      SFML resmi web sitesinden indirip, projenize uygun şekilde ayarlayın.
+    - macOS:
+      brew install sfml
+
+- C++17 veya üzeri standart destekleyen derleyici
+- CMake
