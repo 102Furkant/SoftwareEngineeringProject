@@ -8,7 +8,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
 
@@ -22,4 +21,7 @@ jobs:
           pip install -r backend/requirements.txt pytest httpx
 
       - name: Run backend tests
-        run: python -m pytest backend/tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          pytest backend/tests

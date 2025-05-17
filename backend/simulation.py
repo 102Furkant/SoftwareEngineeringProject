@@ -1,183 +1,119 @@
 import numpy as np
 
-class FluidSimulator:    #2D fluid simulation with solid obstacles and continuous injection.
+def laplacian(field: np.ndarray, dx: float) -> np.ndarray:
+    # discrete Laplacian with zero-Neumann at boundaries
+    lap = np.zeros_like(field)
+    lap[1:-1,1:-1] = (
+        field[:-2,1:-1] + field[2:,1:-1] +
+        field[1:-1,:-2] + field[1:-1,2:] -
+        4 * field[1:-1,1:-1]
+    ) / (dx**2)
+    return lap
 
-    def __init__(
-        self,
-        width: int,
-        height: int,
-        diff: float = 0.0001,
-        visc: float = 0.0001,
-        env_type: str = 'bounded'
-    ):
-        self.width = width
-        self.height = height
-        self.diff = diff
-        self.visc = visc
-        if env_type not in ('bounded', 'periodic'):
-            raise ValueError("env_type must be 'bounded' or 'periodic'")
-        self.env_type = env_type
+class FluidSimulator:
+    def __init__(self, nx: int, ny: int, dx: float=1.0, dt: float=0.1,
+                 viscosity: float=0.02, u_in: float=1.0):
+        self.nx, self.ny = nx, ny
+        self.dx, self.dt = dx, dt
+        self.nu = viscosity
+        self.u_in = u_in
+        shape = (ny, nx)
+        self.u = np.zeros(shape)
+        self.v = np.zeros(shape)
+        self.p = np.zeros(shape)
+        self.obstacle = np.zeros(shape, dtype=bool)
 
-        # state fields
-        self.density = np.zeros((height, width), float)
-        self.Vx = np.zeros((height, width), float)
-        self.Vy = np.zeros((height, width), float)
-        self.Vx0 = np.zeros((height, width), float)
-        self.Vy0 = np.zeros((height, width), float)
+    def set_obstacle(self, mask: np.ndarray) -> None:
+        self.obstacle = mask.copy()
+        self.u[mask] = 0
+        self.v[mask] = 0
+        self.p[mask] = 0
 
-        # solid obstacle mask
-        self.obstacle = np.zeros((height, width), bool)
+    def advect(self, field: np.ndarray, u0: np.ndarray, v0: np.ndarray) -> np.ndarray:
+        ny, nx = field.shape
+        dt_dx = self.dt / self.dx
+        i, j = np.meshgrid(np.arange(ny), np.arange(nx), indexing='ij')
+        x_back = j - u0 * dt_dx
+        y_back = i - v0 * dt_dx
+        x_back = np.clip(x_back, 0, nx-1)
+        y_back = np.clip(y_back, 0, ny-1)
+        x0 = np.floor(x_back).astype(int)
+        y0 = np.floor(y_back).astype(int)
+        x1 = np.clip(x0 + 1, 0, nx-1)
+        y1 = np.clip(y0 + 1, 0, ny-1)
+        sx = x_back - x0
+        sy = y_back - y0
+        f00 = field[y0, x0]
+        f10 = field[y0, x1]
+        f01 = field[y1, x0]
+        f11 = field[y1, x1]
+        advected = (1-sx)*(1-sy)*f00 + sx*(1-sy)*f10 + (1-sx)*sy*f01 + sx*sy*f11
+        advected[self.obstacle] = 0
+        return advected
 
-    def set_obstacle(self, shape: str, **kwargs) -> None:       #Define a solid region where fluid cannot enter.
-        mask = np.zeros_like(self.obstacle)                     #shape: 'square','circle','triangle','ellipse', or 'custom' with mask kwarg.
-        if shape == 'square':
-            s = kwargs.get('size', min(self.width, self.height)//4)
-            x0 = (self.width - s)//2
-            y0 = (self.height - s)//2
-            mask[y0:y0+s, x0:x0+s] = True
+    def diffuse(self, field: np.ndarray) -> np.ndarray:
+        return field + self.nu * self.dt * laplacian(field, self.dx)
 
-        elif shape == 'circle':
-            r = kwargs.get('radius', min(self.width, self.height)//4)
-            cx, cy = self.width//2, self.height//2
-            y, x = np.ogrid[:self.height, :self.width]
-            mask[(x-cx)**2 + (y-cy)**2 <= r*r] = True
+    def project(self) -> None:
+        dx = self.dx
+        p = self.p
+        # Compute divergence with proper boundary handling
+        div = np.zeros_like(self.u)
+        div[1:-1,1:-1] = (
+            (self.u[1:-1,2:] - self.u[1:-1,:-2]) +
+            (self.v[2:,1:-1] - self.v[:-2,1:-1])
+        ) / (2*dx)
+        
+        # Solve Poisson equation for pressure
+        p_new = p.copy()
+        for _ in range(100):
+            p_new[1:-1,1:-1] = (
+                p_new[1:-1,2:] + p_new[1:-1,:-2] +
+                p_new[2:,1:-1] + p_new[:-2,1:-1] -
+                div[1:-1,1:-1] * dx*dx
+            ) * 0.25
+            p_new[self.obstacle] = 0
+            p = p_new
+        
+        self.p = p
+        
+        # Update velocity field
+        self.u[1:-1,1:-1] -= (p[1:-1,2:] - p[1:-1,:-2]) / (2*dx)
+        self.v[1:-1,1:-1] -= (p[2:,1:-1] - p[:-2,1:-1]) / (2*dx)
+        
+        # Enforce boundary conditions
+        self.u[:,0] = self.u_in  # Inflow
+        self.u[:,-1] = 0  # Outflow
+        self.v[:,0] = 0  # No vertical velocity at inflow
+        self.v[:,-1] = 0  # No vertical velocity at outflow
+        self.u[self.obstacle] = 0
+        self.v[self.obstacle] = 0
 
-        elif shape == 'triangle':
-            for j in range(self.height):
-                limit = int((j / self.height) * self.width)
-                mask[j, :limit] = True
+    def step(self) -> None:
+        # Ensure stability
+        max_dt = self.dx**2 / (4 * self.nu)
+        if self.dt > max_dt:
+            self.dt = max_dt
+        
+        # Store current velocity field
+        u0, v0 = self.u.copy(), self.v.copy()
+        
+        # Advect
+        self.u = self.advect(self.u, u0, v0)
+        self.v = self.advect(self.v, u0, v0)
+        
+        # Diffuse
+        self.u = self.diffuse(self.u)
+        self.v = self.diffuse(self.v)
+        
+        # Project
+        self.project()
 
-        elif shape == 'ellipse':
-            rx = kwargs.get('rx', self.width/4)
-            ry = kwargs.get('ry', self.height/6)
-            cx, cy = self.width/2, self.height/2
-            y, x = np.ogrid[:self.height, :self.width]
-            mask[((x-cx)/rx)**2 + ((y-cy)/ry)**2 <= 1] = True
+    def get_velocity(self) -> tuple[np.ndarray, np.ndarray]:
+        return self.u, self.v
 
-        elif shape == 'custom':
-            custom = kwargs.get('mask')
-            arr = np.array(custom, bool)
-            if arr.shape != mask.shape:
-                raise ValueError('custom mask shape mismatch')
-            mask = arr
+    def get_pressure(self) -> np.ndarray:
+        return self.p
 
-        else:
-            raise ValueError(f'Unknown shape "{shape}"')
-
-        self.obstacle = mask
-        # clear any fluid inside obstacle
-        self.density[mask] = 0.0
-        self.Vx[mask] = 0.0
-        self.Vy[mask] = 0.0
-
-    def inject(self, amount: float, direction: str = 'top') -> None:     #Add fluid density at boundary: 'top' or 'left'.
-        if direction == 'top':
-            self.density[0, ~self.obstacle[0]] += amount
-        elif direction == 'left':
-            self.density[~self.obstacle[:,0], 0] += amount
-        else:
-            raise ValueError("direction must be 'top' or 'left'")
-
-    def step(self, dt: float) -> None:
-        # velocity diffusion and projection
-        self.diffuse(1, self.Vx0, self.Vx, self.visc, dt)
-        self.diffuse(2, self.Vy0, self.Vy, self.visc, dt)
-        self.project(self.Vx0, self.Vy0, self.Vx, self.Vy)
-
-        # velocity advection and projection
-        self.advect(1, self.Vx, self.Vx0, self.Vx0, self.Vy0, dt)
-        self.advect(2, self.Vy, self.Vy0, self.Vx0, self.Vy0, dt)
-        self.project(self.Vx, self.Vy, self.Vx0, self.Vy0)
-
-        # density diffusion and advection
-        self.diffuse(0, self.density, self.density, self.diff, dt)
-        self.advect(0, self.density, self.density, self.Vx, self.Vy, dt)
-
-        # enforce obstacle: clear inside
-        self.density[self.obstacle] = 0.0
-        self.Vx[self.obstacle] = 0.0
-        self.Vy[self.obstacle] = 0.0
-
-    def diffuse(self, b: int, x: np.ndarray, x0: np.ndarray, diff: float, dt: float) -> None:
-        a = dt * diff * self.width * self.height
-        for _ in range(20):
-            x[1:-1,1:-1] = (
-                x0[1:-1,1:-1]
-                + a * (
-                    x[1:-1,2:] + x[1:-1,:-2]
-                    + x[2:,1:-1] + x[:-2,1:-1]
-                )
-            ) / (1 + 4 * a)
-            self.set_bnd(b, x)
-
-    def advect(
-        self,
-        b: int,
-        d: np.ndarray,
-        d0: np.ndarray,
-        vel_x: np.ndarray,
-        vel_y: np.ndarray,
-        dt: float
-    ) -> None:
-        dt0 = dt * self.width
-        for j in range(self.height):
-            for i in range(self.width):
-                x = i - dt0 * vel_x[j, i]
-                y = j - dt0 * vel_y[j, i]
-                x = min(max(x, 0.5), self.width - 1.5)
-                y = min(max(y, 0.5), self.height - 1.5)
-                i0, i1 = int(x), int(x) + 1
-                j0, j1 = int(y), int(y) + 1
-                s1, s0 = x - i0, 1 - (x - i0)
-                t1, t0 = y - j0, 1 - (y - j0)
-                d[j, i] = (
-                    s0 * (t0 * d0[j0, i0] + t1 * d0[j1, i0])
-                    + s1 * (t0 * d0[j0, i1] + t1 * d0[j1, i1])
-                )
-        self.set_bnd(b, d)
-
-    def project(
-        self,
-        vel_x: np.ndarray,
-        vel_y: np.ndarray,
-        p: np.ndarray,
-        div: np.ndarray
-    ) -> None:
-        div[1:-1,1:-1] = -0.5 * (
-            vel_x[1:-1,2:] - vel_x[1:-1,:-2]
-            + vel_y[2:,1:-1] - vel_y[:-2,1:-1]
-        ) / self.width
-        p.fill(0.0)
-        self.set_bnd(0, div)
-        self.set_bnd(0, p)
-        for _ in range(20):
-            p[1:-1,1:-1] = (
-                div[1:-1,1:-1]
-                + p[1:-1,2:] + p[1:-1,:-2]
-                + p[2:,1:-1] + p[:-2,1:-1]
-            ) / 4.0
-            self.set_bnd(0, p)
-        vel_x[1:-1,1:-1] -= 0.5 * (p[1:-1,2:] - p[1:-1,:-2]) * self.width
-        vel_y[1:-1,1:-1] -= 0.5 * (p[2:,1:-1] - p[:-2,1:-1]) * self.height
-        self.set_bnd(1, vel_x)
-        self.set_bnd(2, vel_y)
-
-    def set_bnd(self, b: int, x: np.ndarray) -> None:
-        if self.env_type == 'periodic':
-            x[0, :] = x[-2, :]
-            x[-1, :] = x[1, :]
-            x[:, 0] = x[:, -2]
-            x[:, -1] = x[:, 1]
-            return
-
-        # bounded (no-slip) boundaries
-        x[0, :]  = -x[1, :]    if b == 2 else x[1, :]
-        x[-1, :] = -x[-2, :]   if b == 2 else x[-2, :]
-        x[:, 0]  = -x[:, 1]    if b == 1 else x[:, 1]
-        x[:, -1] = -x[:, -2]   if b == 1 else x[:, -2]
-
-        # corners
-        x[0, 0]     = 0.5 * (x[1, 0] + x[0, 1])
-        x[0, -1]    = 0.5 * (x[1, -1] + x[0, -2])
-        x[-1, 0]    = 0.5 * (x[-2, 0] + x[-1, 1])
-        x[-1, -1]   = 0.5 * (x[-2, -1] + x[-1, -2])
+    def get_obstacle(self) -> np.ndarray:
+        return self.obstacle
