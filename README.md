@@ -1,62 +1,102 @@
-## Fluid Simulation Project
-This project is designed to simulate fluid dynamics using mathematical models and visualize the results.
+2D Fluid Simulation Project
+This project simulates 2D fluid dynamics using the Navier-Stokes equations and visualizes the results interactively using Pygame. The simulation supports customizable obstacles (circle, rectangle, semicircle, triangle), adjustable viscosity, and real-time visualization of velocity and pressure fields.
+Team Members
 
-## Team Members
-- [**Furkan KARTALOĞLU**](https://github.com/102Furkant) - **425477**
-- [**Tunahan KARALİ**](https://github.com/imnightmare53) - **425431**
-- [**Mehmet Melih VAR**](https://github.com/mvarr) - **434388**
-- [**Kadir YILMAZ**](https:://github.com/Kadiryilmazz) - **425481**
+Furkan KARTALOĞLU - 425477
+Tunahan KARALİ - 425431
+Mehmet Melih VAR - 434388
+Kadir YILMAZ - 425481
+
+Project Overview
+The system consists of two main components:
+
+Backend (FluidSimulator): Implements the fluid dynamics simulation using the Navier-Stokes equations with a semi-Lagrangian advection scheme, explicit diffusion, and pressure projection to enforce incompressibility.
+Frontend (FluidUI): Provides an interactive visualization using Pygame, allowing users to add/remove obstacles, adjust viscosity, change visualization colors, and view simulation statistics.
+
+Features
+
+Simulation: 
+2D fluid flow with inlet velocity and no-slip boundary conditions.
+Supports multiple obstacle shapes: circle, rectangle, semicircle, and triangle.
+Adjustable viscosity via a slider.
+Computes velocity, pressure, vorticity, and divergence fields.
+Tracks simulation statistics (e.g., max/avg speed, pressure, step time).
+
+
+Visualization:
+Real-time rendering of velocity magnitude or pressure field.
+Interactive obstacle placement and removal.
+Color selection for velocity visualization.
+Toggleable statistics display.
+Pause/resume and reset functionality.
+
+
+Performance: Numerical stability ensured by adaptive time-stepping based on viscosity and grid size.
+
+Tech Stack
+
+Backend: Python, NumPy, SciPy
+Frontend: Pygame
+Mathematical Modeling: Custom implementation of Navier-Stokes equations with semi-Lagrangian advection, explicit diffusion, and Jacobi iteration for pressure projection.
+
+Prerequisites
+
+Python 3.8+
+Required Python packages:
+numpy
+pygame
+scipy
 
 
 
-The system consists of three main components:
-
-1- Backend (API) / Handles user input and runs calculations. \
-2- Frontend (UI & Visualization) / Displays the simulation results. \
-3- Mathematical Model / Computes fluid movement and behavior. 
-
-## Project Status
-- Backend API setup in progress.
-- Simulation logic is under development.
-- Visualization methods being planned.
-
-## Tech Stack
-- Backend: Python, FastAPI
-- Frontend: To be determined (possible options: JavaScript, Pygame, or Web UI)
-- Mathematical Modeling: NumPy, SciPy, or custom algorithms
-
-## How to Run
-- **Clone the Repository**
+How to Run
+Clone the Repository
 ```bash
 git clone https://github.com/102Furkant/SoftwareEngineeringProject
 cd SoftwareEngineeringProject
 ```
 
-- **Set Up the Backend**
 ```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn src.main:app --reload
+Install Dependencies
+pip install numpy pygame scipy
 ```
 
-The backend (i suppose) will run at ```http://127.0.0.1:8000.``` \
-API documentation is (probabaly will be) available at ```http://127.0.0.1:8000/docs.```
-
-- **Set Up the Frontend (If applicable)**
+Run the Simulation
 ```bash
-cd frontend
-# Run frontend setup (depending on chosen framework)
+python main.py
 ```
 
-## Next Steps
-- Finalizing simulation logic.
-- Developing visualization and UI.
-- Optimizing performance for better efficiency.
-- Further updates will be provided as development progresses.
+The simulation will open a Pygame window displaying the fluid flow. Use the controls below to interact with the simulation.
 
-## License
-MIT licence or whatever they called. just dont copy-paste our code.
 
-**Feel free to contribute!** 
+Controls
+
+Space: Pause/resume the simulation.
+R: Reset the simulation to initial state.
+S: Toggle simulation statistics display.
+C: Select circle obstacle mode.
+X: Select rectangle obstacle mode.
+H: Select semicircle obstacle mode.
+T: Select triangle obstacle mode.
+Left Click: Place the selected obstacle (or draw single-cell obstacles if no mode is selected).
+Right Click: Remove obstacles.
+Q: Quit the simulation.
+Mouse Drag on Slider: Adjust viscosity (0.0 to 0.1).
+Click Color Buttons: Change velocity visualization color.
+
+Project Status
+
+Backend simulation logic is fully implemented and stable.
+Interactive Pygame-based UI is complete with obstacle placement and visualization controls.
+Performance is optimized with adaptive time-stepping and efficient numerical methods.
+Future improvements could include:
+Additional obstacle shapes.
+Enhanced visualization options (e.g., streamlines, vorticity display).
+Saving/loading simulation states.
+
+
+
+License
+This project is licensed under the MIT License. Feel free to use and modify the code, but please provide attribution and avoid direct copy-pasting without contributing back.
+Contributing
+Contributions are welcome! Please fork the repository, create a feature branch, and submit a pull request with your changes. Ensure your code follows the existing style and includes appropriate comments.
