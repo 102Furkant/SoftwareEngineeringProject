@@ -5,6 +5,8 @@ semicircle, triangle), adjustable viscosity, and real-time visualization of velo
 
 Team Members
 
+
+
 Furkan KARTALOĞLU - 425477
 
 Tunahan KARALİ - 425431
@@ -16,6 +18,8 @@ Kadir YILMAZ - 425481
 
 Project Overview
 
+
+
 The system consists of two main components:
 
 Backend (FluidSimulator): Implements the fluid dynamics simulation using the Navier-Stokes equations with a semi-Lagrangian advection scheme, explicit diffusion, and pressure projection to enforce
@@ -26,6 +30,8 @@ Frontend (FluidUI): Provides an interactive visualization using Pygame, allowing
 Features
 
 Simulation: 
+
+
 
 2D fluid flow with inlet velocity and no-slip boundary conditions.
 
@@ -40,6 +46,8 @@ Tracks simulation statistics (e.g., max/avg speed, pressure, step time).
 
 
 Visualization:
+
+
 
 Real-time rendering of velocity magnitude or pressure field.
 
@@ -58,6 +66,8 @@ Performance: Numerical stability ensured by adaptive time-stepping based on visc
 
 Tech Stack
 
+
+
 Backend: Python, NumPy, SciPy
 
 Frontend: Pygame
@@ -66,6 +76,8 @@ Mathematical Modeling: Custom implementation of Navier-Stokes equations with sem
 
 
 Prerequisites
+
+
 
 
 Python 3.8+
@@ -106,6 +118,9 @@ The simulation will open a Pygame window displaying the fluid flow. Use the cont
 
 Controls
 
+
+
+
 Space: Pause/resume the simulation.
 
 R: Reset the simulation to initial state.
@@ -132,6 +147,9 @@ Click Color Buttons: Change velocity visualization color.
 
 
 Project Status
+
+
+
 
 Backend simulation logic is fully implemented and stable.
 
