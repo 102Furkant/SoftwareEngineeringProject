@@ -27,13 +27,13 @@ class FluidUI:
         self.viscosity_slider_rect = pygame.Rect(20, self.height - self.GUIDE_HEIGHT - 50, 200, 10)
         self.slider_knob_pos = 120
         self.dragging_slider = False
-        self.BG_COLOR = (0, 0, 0)  # Fixed black background
+        self.BG_COLOR = (0, 0, 0) 
         self.OBSTACLE_COLOR = (255, 255, 255)
         self.AIR_COLOR = (0, 0, 255)  # Default air color
         self.PRESSURE_COLORS = [(255, 0, 0), (255, 255, 0)]
         self.GUIDE_BG_COLOR = (50, 50, 50)
         self.SEPARATOR_COLOR = (255, 255, 255)
-        # Color selection buttons (adjusted for larger screen)
+
         self.color_options = [
             ((0, 0, 255), pygame.Rect(self.width - 60, self.height - 40, 20, 20)),  # Blue
             ((0, 255, 0), pygame.Rect(self.width - 90, self.height - 40, 20, 20)),  # Green
@@ -44,7 +44,7 @@ class FluidUI:
     def init_pygame(self):
         pygame.init()
         self.screen = pygame.display.set_mode((self.width, self.height))
-        pygame.display.set_caption("2D Sıvı Simülatörü")
+        pygame.display.set_caption("2D Fluid Simulation (Admin Panel)")
         self.font = pygame.font.SysFont("arial", 14)
 
     def draw_grid(self):
@@ -56,7 +56,7 @@ class FluidUI:
         max_speed = np.max(speed_smooth) if np.max(speed_smooth) > 0 else 1
         max_pressure = np.max(np.abs(p)) if np.max(np.abs(p)) > 0 else 1
 
-        # Arka planı siyah yap
+
         self.screen.fill(self.BG_COLOR)  # (0, 0, 0)
 
         for i in range(self.sim.ny):
@@ -94,10 +94,9 @@ class FluidUI:
             f"Min Basınç: {stats['min_pressure']:.2f}",
             f"Adım Süresi: {stats['avg_step_time']*1000:.1f}ms"
         ]
-        # Draw stats at top-right corner
+
         for i, text in enumerate(stats_text):
             label = self.font.render(text, True, (255, 255, 255))
-            # Adjust x-coordinate to align right, keeping 10px padding from right edge
             text_width = label.get_width()
             self.screen.blit(label, (self.width - text_width - 10, 10 + i * 20))
 
