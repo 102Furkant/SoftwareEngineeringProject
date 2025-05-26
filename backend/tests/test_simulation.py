@@ -46,11 +46,11 @@ def test_step_without_injection_keeps_empty():
 
 def test_step_with_inflow():
     sim = FluidSimulator(nx=10, ny=10)
-    # Set inflow at top boundary
-    sim.u[0, :] = 1.0
+    # Set inflow at left boundary (which is the actual inlet in our simulation)
+    sim.u[:, 0] = 1.0
     sim.step()
-    # Inflow should propagate
-    assert sim.u[0, :].max() > 0.0
+    # Flow should propagate from left to right
+    assert sim.u[5, 1] > 0.0  # Check flow propagation in the middle of the domain
 
 def test_obstacle_remains_after_step():
     sim = FluidSimulator(nx=10, ny=10)
