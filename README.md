@@ -5,9 +5,9 @@ semicircle, triangle), adjustable viscosity, and real-time visualization of velo
 
 ## Team Members
 
-- Furkan KARTALOĞLU - 425477
-- Tunahan KARALİ - 425431
-- Mehmet Melih VAR - 434388
+- [Furkan KARTALOĞLU](https://github.com/102Furkant) - 425477
+- [Tunahan KARALİ](https://github.com/imnightmare53) - 425431
+- [Mehmet Melih VAR](https://github.com/mvarr) - 434388
 - Kadir YILMAZ - 425481
 
 ## Project Overview
