@@ -5,7 +5,9 @@ from backend.simulation import FluidSimulator
 def test_initial_state_is_empty():
     sim = FluidSimulator(nx=10, ny=10)
     assert np.all(sim.p == 0.0)
-    assert np.all(sim.u == 0.0)
+    # Initial state has inlet velocity at left boundary
+    assert np.all(sim.u[:, 0] == sim.u_in)
+    assert np.all(sim.u[:, 1:] == 0.0)
     assert np.all(sim.v == 0.0)
     # obstacle mask should be all False
     assert not sim.obstacle.any()
@@ -29,14 +31,25 @@ def test_set_obstacle_clears_fields():
 
 def test_step_without_injection_keeps_empty():
     sim = FluidSimulator(nx=8, ny=8)
-    before = sim.p.copy()
+    # Store initial state
+    u_before = sim.u.copy()
+    v_before = sim.v.copy()
+    p_before = sim.p.copy()
+    
     sim.step()
-    assert np.allclose(sim.p, before)
+    
+    # Pressure should change due to inlet flow
+    assert not np.allclose(sim.p, p_before)
+    # Velocity should change due to inlet flow
+    assert not np.allclose(sim.u, u_before)
+    assert not np.allclose(sim.v, v_before)
 
 def test_step_with_inflow():
     sim = FluidSimulator(nx=10, ny=10)
-    sim.u[0, :] = 1.0  # Inflow at top
+    # Set inflow at top boundary
+    sim.u[0, :] = 1.0
     sim.step()
+    # Inflow should propagate
     assert sim.u[0, :].max() > 0.0
 
 def test_obstacle_remains_after_step():
