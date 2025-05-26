@@ -49,8 +49,17 @@ def test_step_with_inflow():
     # Set inflow at left boundary (which is the actual inlet in our simulation)
     sim.u[:, 0] = 1.0
     sim.step()
-    # Flow should propagate from left to right
-    assert sim.u[5, 1] > 0.0  # Check flow propagation in the middle of the domain
+    
+    # Check that inflow boundary condition is maintained
+    assert np.allclose(sim.u[:, 0], 1.0)
+    
+    # Check flow propagation in the middle of the domain
+    # We expect positive velocity (flow from left to right)
+    assert sim.u[5, 1] > 0.0, f"Expected positive velocity, got {sim.u[5, 1]}"
+    
+    # Check that flow is propagating in the correct direction
+    # The velocity should decrease as we move right (due to diffusion)
+    assert sim.u[5, 1] > sim.u[5, 2], "Velocity should decrease as we move right"
 
 def test_obstacle_remains_after_step():
     sim = FluidSimulator(nx=10, ny=10)
